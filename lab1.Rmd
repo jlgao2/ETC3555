@@ -1,0 +1,54 @@
+---
+title: "lab1"
+author: "Jia Lin Gao"
+date: "11/08/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+##exercise 1
+```{r}
+red_df = read_delim('data/winequality-red.csv', delim=";")
+white_df = read_delim('data/winequality-white.csv', delim=";")
+```
+## exercise 2
+```{r}
+red_df <- mutate(red_df, wine = "red")
+white_df <- mutate(white_df, wine = "white")
+wines_df <- bind_rows(red_df, white_df)
+
+summarise(wines_df)
+
+wines_df <- mutate(wines_df, good_quality = ifelse(quality>7, TRUE, FALSE))
+wines_df <- mutate(wines_df, id = row_number())
+
+```
+## exercise 4
+```{r}
+wines_df %>% filter(wine == "red") %>% 
+  arrange(desc(quality))
+
+wines_df %>% 
+  map(~ sum(is.na(.x))) %>%
+  unlist()
+
+```
+
+## exercise 5
+```{r}
+wines_df %>% group_by(wine) %>% summarise(mean = mean(quality), n=n())
+```
+
+## exercise 7
+```{r}
+wines_df %>% group_by(wine) %>% nest()
+
+
+```

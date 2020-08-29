@@ -1,0 +1,126 @@
+---
+title: "Lab 2"
+author: "Jia Lin Gao"
+date: "16/08/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(plotrix)
+library(tidyverse)
+```
+```{r}
+v =matrix(c(1,2), 2, 1) # creating two example column vectors. Check ?matrix if in doubt
+u =matrix(c(-1,-0.5), 2, 1) #transpose is the function t()t(v)%*%
+```
+
+```{r}
+v =c(1,2)
+u =c(-1,-0.5)#so this works and we write less
+
+v%*%u
+```
+
+```{r}
+
+my_vec = c(1, 2, 3)
+ur_vec = c(3, 2, 1)
+normalize_vec =function(v) {
+  magnitude = sqrt(sum(v*v))
+  norm_vec = v/magnitude
+  return(norm_vec)
+}
+
+n_my_vec = normalize_vec(my_vec)
+```
+
+```{r}
+#this is an example point
+x = c(0.2, 1)
+x = normalize_vec(x)
+#our example initial weights
+w = c(1, 1)
+w = normalize_vec(w)
+#this is an auxiliary function to produce plots
+plot_base = function() {
+  plot(NA, xlim=c(-1.5,1.5), ylim=c(-1.5,1.5),asp=1, xlab="x", ylab="y")
+  abline(h=0)
+  abline(v=0)
+  draw.circle(0,0,1)
+  }
+#Create the base plot
+plot_base()
+#Add the weights
+#In black we have our weight vector
+arrows( 0, 0, w[1], w[2])
+#In blue our example x
+arrows( 0, 0, x[1], x[2], col="blue")
+```
+
+
+```{r}
+y <- x%*%w
+new_w = w - x
+new_y = x%*%new_w
+```
+
+
+```{r}
+
+#we will call w_t the updated w, and keep the initial w intact
+w_t = w-x
+plot_base()
+#In black we have our weight vector
+arrows( 0, 0, w[1], w[2])
+#in blue our target
+arrows( 0, 0, x[1], x[2], col="blue")
+arrows( 0, 0,-x[1],-x[2], col="blue", lty=2)
+arrows( 0, 0, w_t[1], w_t[2], col="darkgrey", lty=2, lwd=2)
+#check here the correctness
+y_updated = x%*%w_t
+print(y_updated, y)
+```
+
+```{r}
+w_t = w_t-x
+plot_base()
+#In black we have our weight vector
+arrows( 0, 0, w[1], w[2])
+#in blue our target
+arrows( 0, 0, x[1], x[2], col="blue")
+arrows( 0, 0,-x[1],-x[2], col="blue", lty=2)
+arrows( 0, 0, w_t[1], w_t[2], col="darkgrey", lty=2, lwd=2)
+```
+
+```{r}
+#exercise 7
+rolls <- sample(6, 10000, replace = TRUE)
+```
+
+```{r}
+#exercise 8
+many_six <- sum(rolls == 6)
+```
+
+```{r}
+#exercise 9
+dice_first <- sample(6, 10000, replace = TRUE)
+dice_second <- sample(6, 10000, replace = TRUE)
+
+sum_seven <- sum(dice_first+dice_second == 7)
+```
+
+```{r}
+mycoin <- sample(c("heads", "tails"), 1, replace = TRUE)
+many_coins <- sample(c("heads", "tails"), 10000, replace = TRUE)
+many_heads <- sum(many_coins == "heads")
+```
+
+```{r}
+dice_third <- sample(6, 10000, replace = TRUE)
+sum_same <- sum(ifelse(abs(dice_first - dice_second) == 1 & dice_second == dice_third, TRUE, FALSE))
+```
