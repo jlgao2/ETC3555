@@ -1,0 +1,202 @@
+---
+title: "lab7"
+author: "Jia Lin Gao"
+date: "06/10/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+library(keras)
+mnist <- dataset_mnist()
+x_train <- mnist$train$x
+y_train <- mnist$train$y
+x_test <- mnist$test$x
+y_test <- mnist$test$y
+
+# reshape
+x_train <- array_reshape(x_train, c(nrow(x_train), 784))
+x_test <- array_reshape(x_test, c(nrow(x_test), 784))
+# rescale
+x_train <- x_train / 255
+x_test <- x_test / 255
+
+y_train <- to_categorical(y_train, 10)
+y_test <- to_categorical(y_test, 10)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r}
+model <- keras_model_sequential() 
+model %>% 
+  layer_dense(units = 256, activation = 'relu', input_shape = c(784)) %>% 
+  layer_dropout(rate = 0.4) %>% 
+  layer_dense(units = 128, activation = 'relu') %>%
+  layer_dropout(rate = 0.3) %>%
+  layer_dense(units = 10, activation = 'softmax')
+```
+```{r}
+model %>% compile(
+  loss = 'categorical_crossentropy',
+  optimizer = optimizer_rmsprop(),
+  metrics = c('accuracy')
+)
+```
+
+```{r}
+history <- model %>% fit(
+  x_train, y_train, 
+  epochs = 30, batch_size = 128, 
+  validation_split = 0.2
+)
+```
+
+```{r}
+model %>% evaluate(x_test, y_test)
+```
+```{r}
+model %>% predict_classes(x_test)
+```
+## Assignment 3 
+
+### Question 1
+
+Create another DNN as above, but with half as many units in each hidden layer. Assess the performanceof this model against your previous model.
+
+
+```{r}
+
+```
+
+```{r}
+model_q1a <- keras_model_sequential() 
+model_q1a %>% 
+  layer_dense(units = 256/2, activation = 'relu', input_shape = c(784)) %>% 
+  layer_dropout(rate = 0.4) %>% 
+  layer_dense(units = 128/2, activation = 'relu') %>%
+  layer_dropout(rate = 0.3) %>%
+  layer_dense(units = 10, activation = 'softmax')
+```
+
+```{r}
+model_q1a %>% compile(
+  loss = 'categorical_crossentropy',
+  optimizer = optimizer_rmsprop(),
+  metrics = c('accuracy')
+)
+```
+
+```{r}
+history_q1a <- model_q1a %>% fit(
+  x_train, y_train, 
+  epochs = 30, batch_size = 128, 
+  validation_split = 0.2
+)
+```
+```{r}
+model_q1a %>% evaluate(x_test, y_test)
+```
+```{r}
+model_q1b <- keras_model_sequential() 
+model_q1b %>% 
+  layer_dense(units = 256/2, 
+              activation = 'relu', 
+              kernel_regularizer = regularizer_l1(l = 0.01),
+              input_shape = c(784)) %>% 
+  layer_dense(units = 128/2,
+              kernel_regularizer = regularizer_l1(l = 0.01),
+              activation = 'relu') %>%
+  layer_dense(units = 10, 
+              activation = 'softmax')
+```
+```{r}
+model_q1b %>% compile(
+  loss = 'categorical_crossentropy',
+  optimizer = optimizer_rmsprop(),
+  metrics = c('accuracy')
+)
+```
+
+```{r}
+history_q1b <- model_q1b %>% fit(
+  x_train, y_train, 
+  epochs = 30, batch_size = 128, 
+  validation_split = 0.2
+)
+```
+```{r}
+model_q1b %>% evaluate(x_test, y_test)
+```
+
+```{r}
+model_q1c <- keras_model_sequential() 
+model_q1c %>% 
+  layer_dense(units = 256/2, 
+              activation = 'relu', 
+              input_shape = c(784)) %>% 
+  layer_dense(units = 128/2,
+              activation = 'relu') %>%
+  layer_dense(units = 10, 
+              activation = 'softmax')
+```
+```{r}
+model_q1c %>% compile(
+  loss = 'categorical_crossentropy',
+  optimizer = optimizer_rmsprop(),
+  metrics = c('accuracy')
+)
+```
+
+```{r}
+history_q1c <- model_q1b %>% fit(
+  x_train, y_train, 
+  epochs = 30, batch_size = 128, 
+  validation_split = 0.2,
+  callbacks = list(
+    callback_early_stopping(monitor = "val_loss",
+                            min_delta = 1e-3,
+                            patience = 5, 
+                            mode = "auto",
+                            restore_best_weights = TRUE)
+  )
+)
+```
+```{r}
+model_q1c %>% evaluate(x_test, y_test)
+```
+
+```{r}
+library(tfruns)
+# run various combinations of dropout1 and dropout2
+runs <- tuning_run("lab7_q2.R", flags = list(
+  width = c(16, 32, 64, 128),
+  dropout = c(0, 0.25, 0.5, 0.75)
+))
+```
+```{r}
+# find the best evaluation accuracy
+library(dplyr)
+runs <- runs %>% 
+  select(metric_val_accuracy, flag_width, flag_dropout)
+
+runs[order(runs$metric_val_accuracy, decreasing = TRUE), ]
+```
+```{r}
+#best weidth and dropout
+width = 128
+dropout = 0.25
+
+```
+

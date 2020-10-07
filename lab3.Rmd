@@ -84,10 +84,10 @@ weights_df <- as.data.frame(do.call(rbind, weights))
 colnames(weights_df) <- c("citer", "cc","cb1","cb2")
 weights_df$ctime <- seq.int(nrow(weights_df))
 
-sprintf("The perceptron learning algorithm took %i updates to coverge, this occured in the %ith iteration", max(weights_df$ctime), max(weights_df$citer))
-
+sprintf("The perceptron learning algorithm took %i updates to converge", max(weights_df$ctime))
+sprintf("This occurred in iteration %.0f", max(weights_df$citer))
 ```
-The above output is the result of running a perceptron algorithm on the randomly generated dataset. 
+ 
 ```{r}
 plot <- ggplot(weights_df)+
   geom_abline(intercept = -c/b2, slope = -b1/b2, color = "red")+
@@ -102,6 +102,7 @@ plot <- ggplot(weights_df)+
 plot
 #animate(plot, fps = 5, duration = 15, end_pause = 50)
 ```
+The above output is the result of running a perceptron algorithm on the randomly generated dataset.
 \newpage
 
 # Exercise 2
@@ -122,7 +123,7 @@ coin_exp <- function(n_coins, n_times){
 ```
 
 ## Question 2A
-The $\mu$ of any given fair (simulated) coin, tossed 10 times will be 0.5. 
+The $\mu$ of any given fair (simulated) coin will be 0.5.
 
 ## Question 2B
 See histogram below
@@ -143,8 +144,7 @@ coin_result_df_long <- coin_result_df %>% pivot_longer(c(v1, v2, vmin), names_to
 
 ```{r}
 hist_1 <- ggplot(data=coin_result_df_long, mapping = aes(x=v, fill=Coin))+
-  geom_histogram(position = "dodge", binwidth = 0.1)+
-  geom_density(alpha=0.7, kernel = "g",adjust=5)
+  geom_histogram(position = "dodge", binwidth = 0.1)
   
 hist_1
 ```
@@ -181,7 +181,7 @@ ggplot(data=hoff_df, mapping=aes(x=e))+
 
 ## Question 2D
 
-It appears that $C_1$ and $C_2$ obey the Hoeffding inequality, while $C_min$ does not. This is because while the inequality applies to any individual bin before the sample data have been drawn, that is, we pick the random index of $C_2$ or say we will examine the first coin $C_1$ before drawing the samples. We can only examine $C_min$ after sampling the data, in effect, we are being picky about choosing a sample that best fits a certain hypothesis. If we were to test the hypothesis that  $Pr[|v-\mu| >\epsilon]$ is small for all of 1000 coins, we must also modify the bound from $2e^{-2\epsilon^2N}$ to $2Me^{-2\epsilon^2N}$ where M is your number of hypotheses, in this case, 1000.
+It appears that $C_1$ and $C_2$ obey the Hoeffding inequality, while $C_{min}$ does not. This is because while the inequality applies to any individual bin before the sample data have been drawn, that is, we pick the random index of $C_2$ or say we will examine the first coin $C_1$ before drawing the samples. We can only examine $C_{min}$ after sampling the data, in effect, we are being picky about choosing a sample that best fits a certain hypothesis. If we were to test the hypothesis that  $Pr[|v-\mu| >\epsilon]$ is small for all of 1000 coins, we must also modify the bound from $2e^{-2\epsilon^2N}$ to $2Me^{-2\epsilon^2N}$ where M is your number of hypotheses, in this case, 1000.
 
 ## Question 2E
 
@@ -192,7 +192,7 @@ The experiment of flipping a coin is analogous to the act of drawing red and gre
 
 # Exercise 3
 
-Functions have been defined to generate the dataset for this exercise, to run the perceptron algorithm, as well as plot the results (code to animate the graphs have been commented out, but the animated .gif files are attached) 
+Functions have been defined to generate the dataset for this exercise, to run the perceptron algorithm, as well as plot the results (code to animate the graphs have been commented out, but the animated .gif files are attached)
 ```{r}
 make_df <- function(df_len=20, min=-5, max =5, d=2, coefs, seed=50)
 {
@@ -242,8 +242,8 @@ perceptron <- function(df, n_iter=100, w = runif(n = 3, min = -1, max = 1))
   return(weights_df)
 }
 ```
-```{r percep plot anim}
-percep_plot <- function(weights_df, df, coefs)
+```{r percep plot}
+percep_plot <- function(weights_df, df, coefs, ttl)
 {  
   b0 <- coefs[1]
   b1 <- coefs[2]
@@ -255,13 +255,13 @@ percep_plot <- function(weights_df, df, coefs)
     geom_abline(intercept = as.numeric(-w[1]/w[3]), slope = as.numeric(-w[2]/w[3]), color = "blue")+
     geom_point(data=df, mapping=aes(x=x1, y=x2, colour = as.factor(y))) +
     labs(colour = "category", x = "x1", y = "x2")+
-    ggtitle("Red line is decision boundary, blue line is perceptron estimate")
+    ggtitle(ttl, subtitle = "Red line is decision boundary, blue line is perceptron estimate")
     
   return(plot)
 }
 ```
 
-```{r percep plot}
+```{r percep plot animated}
 percep_plot_anim <- function(weights_df, df, coefs)
 {  
   b0 <- coefs[1]
@@ -296,14 +296,16 @@ plot <- ggplot(data=df_3a, mapping=aes(x=x1, y=x2, color=as.factor(y)))+
   labs(color = "Category")
 plot
 ```
+
 ## Question 3B
 
 ```{r 3b2}
 w_3b <- runif(n = 3, min = -1, max = 1)
 weights_3b <- perceptron(df_3a, w = w_3b)
-plot_3b <- percep_plot(weights_3b, df_3a, coefs_3a)
+plot_3b <- percep_plot(weights_3b, df_3a, coefs_3a, "Question 3B")
 plot_3b
-sprintf("The perceptron learning algorithm took %i updates to converge,\n this occurred in the %.0fth iteration", max(weights_3b$ctime), max(weights_3b$iter))
+sprintf("The perceptron learning algorithm took %i updates to converge", max(weights_3b$ctime))
+sprintf("this occurred in iteration %.0f", max(weights_3b$iter))
 #animate(plot_3b, duration=20)
 ```
 
@@ -329,9 +331,10 @@ plot
 
 ```{r 3c}
 weights_3c <- perceptron(df_3c)
-plot_3c <- percep_plot(weights_3c, df_3c, coefs = coefs_3c)
+plot_3c <- percep_plot(weights_3c, df_3c, coefs = coefs_3c, "Question 3C")
 plot_3c
-sprintf("The perceptron learning algorithm took %i updates to converge,\n this occurred in the %.0fth iteration", max(weights_3c$ctime), max(weights_3c$iter))
+sprintf("The perceptron learning algorithm took %i updates to converge", max(weights_3c$ctime))
+sprintf("this occurred in iteration %.0f", max(weights_3c$iter))
 #animate(plot_3c, duration=20)
 ```
 
@@ -353,15 +356,17 @@ plot
 ```
 ```{r 3d2}
 weights_3d <- perceptron(df_3d)
-plot_3d <- percep_plot(weights_3d, df_3d, coefs_3d)
+plot_3d <- percep_plot(weights_3d, df_3d, coefs_3d, "Question 3D")
 #animate(plot_3d, duration=20)
 plot_3d
-sprintf("The perceptron learning algorithm took %i updates to converge, this occurred in the %.0fth iteration", max(weights_3d$ctime), max(weights_3d$iter))
+sprintf("The perceptron learning algorithm took %i updates to converge", max(weights_3d$ctime))
+sprintf("this occurred in iteration %.0f", max(weights_3d$iter))
 ```
 ## Question 3E 
 
 The dataset with a length of 1000 data points is generated and a perceptron model is trained on it with the results shown below, the model required more updates to obtain the results from Question 3B, 3C and 3E. However the increase in the number of updates required is proportionally less than the increase in dataset length. 
 
+We observe that the larger the dataset, the closer the perceptron decision boundary is to the original. 
 ```{r 3e1}
 b1 <- runif(1, -1, 1) 
 b2 <- runif(1, -1, 1) 
@@ -377,28 +382,36 @@ plot
 ```
 ```{r 3e2}
 weights_3e <- perceptron(df_3e)
-plot_3e <- percep_plot(weights_3e, df_3e,coefs=coefs_3e)
+plot_3e <- percep_plot(weights_3e, df_3e, coefs_3e, "Question 3E")
 #animate(plot_3e, duration=20)
-sprintf("The perceptron learning algorithm took %i updates to converge, this occurred in the %.0fth iteration", max(weights_3e$ctime), max(weights_3e$iter))
+sprintf("The perceptron learning algorithm took %i updates to converge", max(weights_3e$ctime))
+sprintf("this occurred in iteration %.0f", max(weights_3e$iter))
+plot_3e
 ```
 
 ## Question 3F
+
+The results of the algorithm applied to a randomly generated dataset with 10 dimensions is shown below, the increase in dimensions has has a far greater effect on updates required before convergence. 
 
 ```{r}
 coefs_3f <- runif(11, 0.5, 1)
 
 df_3f <- make_df(coefs=coefs_3f, d=10, seed=24, df_len=500)
 weights_3f <- perceptron(df_3f, w = runif(n = 11, min = -1, max = 1), n_iter=10000)
-sprintf("The perceptron learning algorithm took %i updates to converge, this occurred in the %.0fth iteration", max(weights_3f$ctime), max(weights_3f$iter))
+sprintf("The perceptron learning algorithm took %i updates to converge", max(weights_3f$ctime))
+sprintf("This occurred in iteration %.0f", max(weights_3f$iter))
 ```
+## Question 3G
 
+The histogram that is the result of observing the iterations taken when Question 3F is repeated with new random datasets is shown below
 ```{r}
 func_3g <- function()
 {
-  d = 2
-  len = 10
-  df_lst <- replicate(15, make_df(coefs=runif(d+1, 0.5, 1), d=d, df_len=len), simplify = F)
-  weights <- lapply(df_lst, perceptron, w = runif(n = d+1, min = -1, max = 1), n_iter=10000)
+  d <- 10
+  len <- 1000
+  experiments <- 100
+  df_lst <- replicate(experiments, make_df(coefs=runif(d+1, 0.5, 1), d=d, df_len=len), simplify = F)
+  weights <- lapply(df_lst, perceptron, w = runif(n = d+1, min = -1, max = 1), n_iter=25000)
   updates <- lapply(weights, "[",,d+3)
   return(lengths(updates))
 }
@@ -408,10 +421,17 @@ func_3g <- function()
 conv_list <- func_3g()
 ```
 
-```{r}
+```{r cache=FALSE}
 ten_df <- as.data.frame(conv_list)
 colnames(ten_df) <- "Updates"
-hist_plot <- ggplot(data=ten_df, mapping=aes(x=Updates))+
-  geom_histogram(binwidth = 100)
-hist_plot
+knitr::include_graphics('./images/hist.png')
 ```
+```{r cache=FALSE, eval=FALSE}
+q3g <- ten_df$Updates
+hist(q3g)
+```
+
+## Question 3H
+
+The questions appear to infer that convergence is required, therefore accuracy of the classifier would be identical for all the models evaluated in exercise 3. However, increasing $d$ has a far greater effect in increasing the number of updates required for the perceptron algorithm to converge on a working decision boundary compared to increasing $N$. 
+

@@ -15,16 +15,52 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+```{r}
+source("data/plotDigits.R")
+load("data/digits.Rdata")
+X <- cbind(1, X)
+n <- nrow(X)
+plotDigits(X[sample(n,12), -1])
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+sigmoid <-function(z) {
+  g <- 1/(1+ exp(-1*z))
+  g
+}
+feedforward_predict <-function(x, W1, W2)
+{
+  x0 <- x
+  s1 <-t(W1)%*%x0
+  x1 <-rbind(1, sigmoid(s1))
+  s2 <-t(W2)%*%x1
+  x2 <-rbind(1, sigmoid(s2))
+  h <-which.max(x2)
+  h
+  }
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+load("data/weights.Rdata")
+W1_given <-t(W1)
+W2_given <-t(W2)
+
+pred <-sapply(seq(nrow(X)),function(i){
+  feedforward_predict(matrix(X[i, ], ncol = 1)  , W1_given,W2_given)
+})
+
+print(paste("Training Set Accuracy: ",mean(pred==y)*100))
+
+#The following code can be used to visualize some predictions of the neural networks.
+
+id_missclass <-which(y!=pred)
+id_class <-which(y==pred)
+ids <-c(sample(id_missclass, 3),sample(id_class,3))
+
+for(i in ids)
+{
+  plotDigits(X[i,-1])
+  print(paste("Neural network prediction : ", pred[i] , " (digit ", pred[i]%%10, ")", " - ", y[i], sep = ""))
+}
+
+```

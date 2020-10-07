@@ -1,5 +1,5 @@
 ---
-title: "Lab3"
+title: "Lab3/Assignment 2"
 author: "Jia Lin Gao"
 date: "25/08/2020"
 output:
@@ -29,113 +29,76 @@ theme_set(theme_bw())
 library(av)
 library(gifski)
 ```
+# Objective and gradient functions
 
-```{r}
+## Linear regression objective function
+
+```{r echo=T}
 Ein_linreg <- function(X, y, w){
-  n <- nrow(X)
-  p <- ncol(X)
-  mse <- (1/n)*t(y-X%*%w)%*%(y-X%*%w)
+  mse <- (1/nrow(X) )*t(y-X%*%w)%*%(y-X%*%w) 
   return(mse)
   }
 ```
 
-```{r}
+## Logistic regression objective function
+
+Equation derived from [1]
+
+```{r echo=T}
 Ein_logreg <- function(X, y, w){
-    n <- nrow(X)
-    e_in <- (1/n)*sum(log(1+exp(-y*X%*%w)))
-    return(e_in)
-    }
+  e_in <- (1/nrow(X))*sum(log(1+exp(-y*X%*%w)))
+  return(e_in)
+  }
 ```
 
-```{r}
+## Linear regression gradient function
+
+```{r echo=T}
 gEin_linreg <- function(X, y, w){
-  n <- nrow(X)
-  delta_Ein <- (2/n)*(t(X)%*%X%*%w-t(X)%*%y)
+  delta_Ein <- (2/nrow(X))*(t(X)%*%X%*%w-t(X)%*%y)
   return(delta_Ein)
   }
 ```
 
-```{r}
+## Logistic regression gradient function
+
+Equation derived from [1]
+
+```{r echo=T}
 gEin_logreg <- function(X, y, w){
-    n <- nrow(X)
-    delta_Ein <- (1/n) * colSums( sweep(X, 1, sig(X%*%w)-y, "*") )  
-    #delta_Ein <- (1/N) * (y%*%w)/(1+exp(-t(y)%*%X%*%w))
+    delta_Ein <- -(1/nrow(X)) * colSums(sweep(sweep(X, 1, y, "*"), 1, 1+exp(y*X%*%w), "/"))
     return(delta_Ein)
   }
 ```
-######################################################################
 
+# Gradient descent function
 
-
-
-#########################################################################
-```{r}
-Ein_linreg_sgd <- function(X, y, w){
-  mse <- (y-X%*%w)**2
-  return(mse)
-  }
-```
-
-```{r}
-Ein_logreg_sgd <- function(X, y, w){
-    n <- nrow(X)
-    e_in <- (1/n)*sum(1/(1+exp(-y*X%*%w)))
-    return(e_in)
-    }
-```
-
-```{r}
-gEin_linreg_sgd <- function(X, y, w){
-  pred <- t(X)%*%w
-  delta_Ein <- -(y-pred)*X
-  return(delta_Ein)
-  }
-```
-
-```{r}
-gEin_logreg_sgd <- function(X, y, w){
-    n <- nrow(X)
-    delta_Ein <- (1/n) * colSums( sweep(X, 1, y-sig(X%*%w), "*") )  
-    #delta_Ein <- (1/N) * colSums(sweep(sweep(X, 1, y, "*"), 1, 1+exp(y*X%*%w), "/"))
-    #delta_Ein <- (1/N) * (y%*%w)/(1+exp(-t(y)%*%X%*%w))
-    return(delta_Ein)
-  }
-```
-######################################################################################3
-
-
-###########################################################################
-```{r}
-sig <- function(X)
-{
-  1/(1+exp(-X))
-}
-```
-
-
-
-```{r}
-
+```{r echo=T}
 GD <-function(X, y, Ein, gEin, w0, eta, precision, nb_iters){
-  allw <-vector("list", nb_iters)
-  cost <-numeric(nb_iters)
-  allw[[1]] <- w0
-  cost[1] <-Ein(X, y, allw[[1]])
-  flag <- F
-  for (idx in seq(2, nb_iters))
+  allw <-vector("list", nb_iters) #declare vector of weights
+  cost <-numeric(nb_iters) #declare list of costs
+  allw[[1]] <- w0 #initial weight
+  cost[1] <-Ein(X, y, allw[[1]]) #initial cost
+  flag <- F #flag for early stopping
+  for (idx in seq(2, nb_iters)) 
     {
-     allw[[idx]] <- allw[[idx-1]] - eta*gEin(X, y, allw[[idx-1]])     
+     #update costs
+     allw[[idx]] <- allw[[idx-1]] - eta*gEin(X, y, allw[[idx-1]]) 
+     #update cost
      cost[idx] <-Ein(X, y, allw[[idx]])
+     #calculate stopping criteria
      delta <- abs(cost[idx]-cost[idx-1])
-     if (precision > delta)
+     if (precision > delta) #early stopping
      {
+       #extract head of list
        res <- list(allw = allw[1:idx], cost = cost[1:idx])
-       flag <- T
+       flag <- T #break loop
        break
      }
   }
   if(flag == F)
   {
+    #return full list
     res <- list(allw = allw, cost = cost)
   }
   return(res)
@@ -143,63 +106,9 @@ GD <-function(X, y, Ein, gEin, w0, eta, precision, nb_iters){
 
 ```
 
-```{r}
+# Function to generate X data for linear regression
 
-SGD <-function(X, y, Ein, gEin, w0, eta, precision, nb_iters){
-  n <- nrow(X)
-  allw <-vector("list", nb_iters*n)
-  cost <-numeric(nb_iters*n)
-  allw[[1]] <- w0
-  cost[1] <-Ein(X, y, allw[[1]])
-  flag <- F
-  
-  for (i in seq(1, nb_iters))
-    {
-     for (j in seq(1, n))
-     {
-       idx <- ((i-1)*n)+1+j 
-       xn <- X[j, ]
-       yn <- y[j]
-       print("j")
-       print(j)
-       print("idx")
-       print(idx)
-       print("xn")
-       print(xn)
-       print("yn")
-       print(yn)
-       print("w")
-       print(allw[[idx-1]])
-       allw[[idx]] <- allw[[idx-1]] - eta/n*gEin(xn, yn, allw[[idx-1]])
-       print("gEin")
-       print(gEin(xn, yn, allw[[idx-1]]))
-       cost[idx] <-Ein(X, y, allw[[idx]])
-       print("cost")
-       print(cost[idx])
-       delta <- abs(cost[idx]-cost[idx-1])
-       if (precision > delta)
-       {
-         print("flag")
-         res <- list(allw = allw[1:idx], cost = cost[1:idx])
-         flag <- T
-         break
-       }
-     }
-    if (flag == T){
-      break
-    }
-
-    }
-  if(flag == F)
-  {
-    res <- list(allw = allw, cost = cost)
-  }
-  return(res)
-  }
-
-```
-
-```{r}
+```{r echo=T}
 set.seed(1900)# Function taken from Friedman et al.
 genx <-function(n,p,rho){
   #    generate x's multivariate normal with equal corr rho
@@ -219,14 +128,15 @@ genx <-function(n,p,rho){
 }
 ```
 
-###############
-GD Linear
-################
-```{r}
+# Linear regression gradient descent
 
+```{r echo = T}
 N <- 100
 p <- 10
 rho <- 0.2
+lin_eta <- 0.08
+lin_precision <- 0.0002
+lin_iters <-5000
 X <-genx(N, p, rho)
 w_true <- ((-1)^(1:p))*exp(-2*((1:p)-1)/20)
 eps <-rnorm(N)
@@ -234,41 +144,35 @@ k <- 3
 y <- X%*%w_true+k*eps
 res <-GD(X, y, Ein_linreg, gEin_linreg,
          w0=rep(0, p), 
-         eta=0.01, 
-         precision=0.0001, 
-         nb_iters=10000)
+         eta=lin_eta, 
+         precision=lin_precision, 
+         nb_iters=lin_iters)
 plot(res$cost)
 print(w_true)
-print(unlist(tail(res$allw, 1)))
+w_calc <- unlist(tail(res$allw, 1))
+sprintf("Estimated with a learning rate of %f" , lin_eta)
+sprintf("Precision threshold:%f, max iterations:%i", lin_precision, lin_iters)
+print(w_calc)
 ```
 
-##############
-SGD Linear
-##############
+# Generate closed form solution
 
-```{r}
-N <- 100
-p <- 10
-rho <- 0.2
-X <-genx(N, p, rho)
-w_true <- ((-1)^(1:p))*exp(-2*((1:p)-1)/20)
-eps <-rnorm(N)
-k <- 3
-y <- X%*%w_true+k*eps
-res <-SGD(X, y, Ein_linreg_sgd, gEin_linreg_sgd,
-         w0=rep(0, p), 
-         eta=0.0001, 
-         precision=0.0001, 
-         nb_iters=100)
-plot(res$cost)
-print(w_true)
-print(unlist(tail(res$allw, 1)))
+```{r echo=T}
+w_analytical <- (solve(t(X)%*%X)%*%t(X)%*%y)
+print(w_analytical[,1])
 ```
-###############
 
-GD Logistic
-################
 ```{r}
+w_df <- data.frame(xvar = 1:10, w_true, w_calc, w_analytical) %>%
+  pivot_longer(!xvar, names_to = "weights", values_to="value")
+
+ggplot(w_df, aes(xvar,value)) + 
+  geom_line(aes(colour = weights),size=2, alpha=0.5)
+```
+
+# Logistic regression gradient descent
+
+```{r echo=T}
 set.seed(1900)
 N <- 100
 l <--5; u <- 5
@@ -281,16 +185,24 @@ X <-cbind(1, X0)
 y <-sign(X%*%w_true)
 ```
 
-```{r}
+```{r echo=F}
+log_eta <- 0.08
+log_precision <- 0.0002
+log_iters <-5000
+
 res <-GD(X, y, Ein_logreg, gEin_logreg,          
          w0=c(0, 0, 0), 
-         eta=0.05, 
-         precision=0.0001, 
-         nb_iters=10000)
+         eta=log_eta, 
+         precision=log_precision, 
+         nb_iters=log_iters)
 plot(res$cost)
-print(w_true)
+print("The true weights are:")
+print(w_true[,1])
 w_best <-unlist(tail(res$allw,1))
+print("The estimated weights are:")
 print(w_best)
+sprintf("Estimated with a learning rate of %f" , log_eta)
+sprintf("Precision threshold:%f, max iterations:%i", log_precision, log_iters)
 plot(c(l, u),c(u, l),type ='n',xlab ="x1", ylab ="x2")
 lines(x, a*x+b)
 points(X0,col =ifelse(y==1, "red", "blue"))
@@ -299,7 +211,6 @@ b_best <--w_best[1]/w_best[3]
 lines(x, a_best*x+b_best,col ="red")
 ```
 
-###############
 
-SGD Logistic
-################
+# References
+[1]‘Yaser S. Abu-Mostafa’. https://work.caltech.edu/index.html (accessed Sep. 15, 2020).
